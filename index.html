@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Lead — Minimal Gamers</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0410; --bg2:#0f0818; --card:rgba(255,255,255,.04);
+    --border:rgba(255,255,255,.09); --txt:#f0f0f5; --txt2:#9090a8;
+    --grad:linear-gradient(135deg,#ff0099,#8b00ff);
+    --teal:#2dd4bf; --wa:#25d366;
+  }
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);color:var(--txt);min-height:100vh;line-height:1.5}
+
+  /* ── LOGIN / REGISTRAZIONE ── */
+  .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:radial-gradient(ellipse at top,rgba(139,0,255,.12),transparent 60%),var(--bg)}
+  .auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;
+    padding:40px 32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .auth-logo{text-align:center;margin-bottom:8px;font-size:13px;letter-spacing:3px;color:var(--txt2);font-weight:600}
+  .auth-title{text-align:center;font-size:26px;font-weight:800;margin-bottom:4px;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .auth-sub{text-align:center;color:var(--txt2);font-size:14px;margin-bottom:28px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+  .field input{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);
+    border-radius:10px;padding:13px 15px;color:var(--txt);font-size:15px;transition:border-color .2s}
+  .field input:focus{outline:none;border-color:#8b00ff}
+  .field input::placeholder{color:#55556a}
+  .btn-primary{width:100%;background:var(--grad);color:#fff;border:none;border-radius:10px;
+    padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:transform .1s,box-shadow .2s}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,0,153,.3)}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .auth-switch{text-align:center;margin-top:20px;font-size:14px;color:var(--txt2)}
+  .auth-switch a{color:#c77dff;cursor:pointer;font-weight:600;text-decoration:none}
+  .auth-switch a:hover{text-decoration:underline}
+  .msg{padding:12px 14px;border-radius:9px;font-size:14px;margin-bottom:18px;display:none}
+  .msg.err{background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.3);color:#ff8888;display:block}
+  .msg.ok{background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.3);color:#5eead4;display:block}
+
+  /* ── DASHBOARD ── */
+  .dash{display:none;min-height:100vh}
+  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;
+    display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+  .topbar-left{display:flex;align-items:center;gap:14px}
+  .topbar-logo{font-size:13px;letter-spacing:2px;font-weight:700;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .topbar-title{font-size:16px;font-weight:700}
+  .topbar-right{display:flex;align-items:center;gap:16px}
+  .topbar-user{font-size:14px;color:var(--txt2)}
+  .btn-logout{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--txt2);
+    border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600}
+  .btn-logout:hover{color:var(--txt);border-color:#8b00ff}
+
+  .dash-body{padding:24px;max-width:1400px;margin:0 auto}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+  .stat-num{font-size:32px;font-weight:800;margin-bottom:2px}
+  .stat-num.grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat-lbl{font-size:13px;color:var(--txt2);font-weight:500}
+
+  .toolbar{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+  .search{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:11px 15px;color:var(--txt);font-size:14px}
+  .search:focus{outline:none;border-color:#8b00ff}
+  .filter-btn{background:var(--card);border:1px solid var(--border);color:var(--txt2);
+    border-radius:10px;padding:11px 16px;font-size:13px;cursor:pointer;font-weight:600}
+  .filter-btn.active{background:var(--grad);color:#fff;border-color:transparent}
+
+  .leads-grid{display:grid;gap:14px}
+  .lead-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:18px 20px;transition:border-color .2s}
+  .lead-card:hover{border-color:rgba(139,0,255,.4)}
+  .lead-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .lead-name{font-size:17px;font-weight:700}
+  .lead-pc{font-size:13px;color:#c77dff;font-weight:600;margin-top:2px}
+  .lead-date{font-size:12px;color:var(--txt2);white-space:nowrap}
+  .lead-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+  .info-item{font-size:13px}
+  .info-lbl{color:var(--txt2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
+  .info-val{color:var(--txt);font-weight:500;word-break:break-word}
+  .lead-price{display:flex;align-items:baseline;gap:8px;margin-bottom:14px}
+  .price-now{font-size:20px;font-weight:800;color:var(--teal)}
+  .price-old{font-size:14px;color:var(--txt2);text-decoration:line-through}
+  .lead-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .btn-wa{background:var(--wa);color:#fff;border:none;border-radius:9px;padding:10px 18px;
+    font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+  .btn-wa:hover{background:#1ebe5d}
+  .btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--txt2);
+    border-radius:9px;padding:10px 16px;font-size:13px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .btn-ghost:hover{color:var(--txt);border-color:#8b00ff}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px}
+  .badge-new{background:rgba(45,212,191,.15);color:#5eead4}
+  .badge-sold{background:rgba(255,0,153,.15);color:#ff6ec7}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--txt2)}
+  .empty-icon{font-size:40px;margin-bottom:12px;opacity:.5}
+  .loading{text-align:center;padding:60px;color:var(--txt2)}
+  .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:#8b00ff;
+    border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media (max-width:600px){
+    .dash-body{padding:16px}
+    .topbar{padding:14px 16px}
+    .topbar-title{display:none}
+    .lead-info{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SCHERMATA LOGIN / REGISTRAZIONE ═══ -->
+<div class="auth-wrap" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">MINIMAL GAMERS</div>
+    <div class="auth-title" id="authTitle">Dashboard Lead</div>
+    <div class="auth-sub" id="authSub">Accedi per gestire i contatti</div>
+
+    <div class="msg" id="authMsg"></div>
+
+    <!-- Form LOGIN -->
+    <div id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="tu@minimalgamers.it" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="loginBtn" onclick="doLogin()">Accedi</button>
+      <div class="auth-switch">Non hai un account? <a onclick="showRegister()">Registrati</a></div>
+    </div>
+
+    <!-- Form REGISTRAZIONE -->
+    <div id="registerForm" style="display:none">
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="regNome" placeholder="Il tuo nome" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="tu@minimalgamers.it" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Almeno 6 caratteri" autocomplete="new-password">
+      </div>
+      <button class="btn-primary" id="regBtn" onclick="doRegister()">Richiedi accesso</button>
+      <div class="auth-switch">Hai già un account? <a onclick="showLogin()">Accedi</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="dash" id="dashScreen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">MINIMAL GAMERS</span>
+      <span class="topbar-title">Dashboard Lead</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="dashUser"></span>
+      <button class="btn-logout" onclick="doLogout()">Esci</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+    <div class="stats" id="statsRow"></div>
+
+    <div class="toolbar">
+      <input type="text" class="search" id="searchBox" placeholder="🔍 Cerca per nome, email, PC..." oninput="renderLeads()">
+      <button class="filter-btn active" id="fAll" onclick="setFilter('all')">Tutti</button>
+      <button class="filter-btn" id="fNew" onclick="setFilter('new')">Da contattare</button>
+      <button class="filter-btn" id="fSold" onclick="setFilter('sold')">Acquistati</button>
+    </div>
+
+    <div id="leadsContainer">
+      <div class="loading"><div class="spinner"></div>Carico i contatti...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ CONFIG ═══
+const NUMERO_WHATSAPP = '393477133866'; // numero da cui scrivere ai clienti
+
+// ═══ STATO ═══
+let TOKEN = localStorage.getItem('dash_token') || null;
+let NOME_UTENTE = localStorage.getItem('dash_nome') || '';
+let LEADS = [];
+let FILTRO = 'all';
+
+// ═══ AVVIO ═══
+if(TOKEN){ mostraDashboard(); } else { mostraAuth(); }
+
+function mostraAuth(){
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('dashScreen').style.display = 'none';
+}
+function mostraDashboard(){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('dashScreen').style.display = 'block';
+  document.getElementById('dashUser').textContent = NOME_UTENTE ? ('👤 ' + NOME_UTENTE) : '';
+  caricaLeads();
+}
+
+// ═══ SWITCH LOGIN/REGISTER ═══
+function showRegister(){
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('authTitle').textContent = 'Crea account';
+  document.getElementById('authSub').textContent = 'Richiedi l\'accesso alla dashboard';
+  hideMsg();
+}
+function showLogin(){
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('authTitle').textContent = 'Dashboard Lead';
+  document.getElementById('authSub').textContent = 'Accedi per gestire i contatti';
+  hideMsg();
+}
+function showMsg(testo, tipo){
+  const m = document.getElementById('authMsg');
+  m.textContent = testo;
+  m.className = 'msg ' + tipo;
+}
+function hideMsg(){ document.getElementById('authMsg').className = 'msg'; }
+
+// ═══ LOGIN ═══
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if(!email || !password){ showMsg('Inserisci email e password', 'err'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Accesso...';
+  hideMsg();
+
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await r.json();
+    if(data.success){
+      TOKEN = data.token;
+      NOME_UTENTE = data.nome || email;
+      localStorage.setItem('dash_token', TOKEN);
+      localStorage.setItem('dash_nome', NOME_UTENTE);
+      mostraDashboard();
+    } else {
+      showMsg(data.error || 'Errore di accesso', 'err');
+    }
+  } catch(e){
+    showMsg('Errore di connessione. Riprova.', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Accedi';
+  }
+}
+
+// ═══ REGISTRAZIONE ═══
+async function doRegister(){
+  const nome = document.getElementById('regNome').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  if(!nome || !email || !password){ showMsg('Compila tutti i campi', 'err'); return; }
+  if(password.length < 6){ showMsg('La password deve avere almeno 6 caratteri', 'err'); return; }
+
+  const btn = document.getElementById('regBtn');
+  btn.disabled = true; btn.textContent = 'Invio richiesta...';
+  hideMsg();
+
+  try {
+    const r = await fetch('/api/registra', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, email, password }),
+    });
+    const data = await r.json();
+    if(data.success){
+      showMsg(data.message || 'Richiesta inviata! Attendi l\'approvazione.', 'ok');
+      document.getElementById('regNome').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPassword').value = '';
+    } else {
+      showMsg(data.error || 'Errore nella registrazione', 'err');
+    }
+  } catch(e){
+    showMsg('Errore di connessione. Riprova.', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Richiedi accesso';
+  }
+}
+
+// ═══ LOGOUT ═══
+function doLogout(){
+  localStorage.removeItem('dash_token');
+  localStorage.removeItem('dash_nome');
+  TOKEN = null; NOME_UTENTE = '';
+  showLogin();
+  mostraAuth();
+}
+
+// ═══ CARICA LEAD ═══
+async function caricaLeads(){
+  try {
+    const r = await fetch('/api/leads', { headers: { 'x-dash-token': TOKEN } });
+    if(r.status === 401){
+      // Token scaduto
+      doLogout();
+      showMsg('Sessione scaduta, accedi di nuovo', 'err');
+      return;
+    }
+    const data = await r.json();
+    if(data.success){
+      LEADS = data.leads || [];
+      renderStats();
+      renderLeads();
+    } else {
+      document.getElementById('leadsContainer').innerHTML =
+        '<div class="empty"><div class="empty-icon">⚠️</div>' + (data.error || 'Errore caricamento') + '</div>';
+    }
+  } catch(e){
+    document.getElementById('leadsContainer').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠️</div>Errore di connessione</div>';
+  }
+}
+
+// ═══ STATISTICHE ═══
+function renderStats(){
+  const tot = LEADS.length;
+  const venduti = LEADS.filter(l => l.ha_comprato).length;
+  const daContattare = tot - venduti;
+  const valore = LEADS.reduce((s,l) => s + (parseFloat(l.prezzo)||0), 0);
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="stat-num grad">${tot}</div><div class="stat-lbl">Lead totali</div></div>
+    <div class="stat"><div class="stat-num" style="color:#5eead4">${daContattare}</div><div class="stat-lbl">Da contattare</div></div>
+    <div class="stat"><div class="stat-num" style="color:#ff6ec7">${venduti}</div><div class="stat-lbl">Acquistati</div></div>
+    <div class="stat"><div class="stat-num">€${valore.toLocaleString('it-IT',{maximumFractionDigits:0})}</div><div class="stat-lbl">Valore configurato</div></div>
+  `;
+}
+
+// ═══ FILTRI ═══
+function setFilter(f){
+  FILTRO = f;
+  document.getElementById('fAll').classList.toggle('active', f==='all');
+  document.getElementById('fNew').classList.toggle('active', f==='new');
+  document.getElementById('fSold').classList.toggle('active', f==='sold');
+  renderLeads();
+}
+
+// ═══ MESSAGGIO WHATSAPP ═══
+function buildWaLink(lead){
+  const nome = lead.nome || 'ciao';
+  const nomePc = (lead.nome_pc || '').replace('PC GAMING ', '');
+  const msg =
+`Ciao ${nome}! 👋 Siamo *Minimal Gamers*.
+
+Abbiamo visto che hai configurato il tuo PC Gaming *"${nomePc}"* sul nostro sito e volevamo dirti che siamo qui per aiutarti! 🎮
+
+💳 Ti ricordiamo che puoi pagarlo comodamente in *36 rate con Scalapay* (fino a €4.000) e possiamo aiutarti noi con la pratica del finanziamento.
+
+Se hai domande sulla tua build o vuoi modificarla, scrivici pure: siamo qui in chat per te! 🚀`;
+
+  let tel = (lead.telefono || '').replace(/[^0-9]/g,'');
+  // Aggiunge prefisso Italia se manca
+  if(tel && !tel.startsWith('39') && tel.length <= 10) tel = '39' + tel;
+  return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(msg);
+}
+
+// ═══ RENDER LEAD ═══
+function renderLeads(){
+  let lista = LEADS.slice();
+
+  // Filtro stato
+  if(FILTRO === 'new') lista = lista.filter(l => !l.ha_comprato);
+  if(FILTRO === 'sold') lista = lista.filter(l => l.ha_comprato);
+
+  // Ricerca
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  if(q){
+    lista = lista.filter(l =>
+      (l.nome||'').toLowerCase().includes(q) ||
+      (l.cognome||'').toLowerCase().includes(q) ||
+      (l.email||'').toLowerCase().includes(q) ||
+      (l.nome_pc||'').toLowerCase().includes(q) ||
+      (l.telefono||'').toLowerCase().includes(q) ||
+      (l.citta||'').toLowerCase().includes(q)
+    );
+  }
+
+  const cont = document.getElementById('leadsContainer');
+  if(lista.length === 0){
+    cont.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Nessun contatto trovato</div>';
+    return;
+  }
+
+  cont.innerHTML = '<div class="leads-grid">' + lista.map(l => {
+    const nomeCompleto = [l.nome, l.cognome].filter(Boolean).join(' ') || 'Senza nome';
+    const nomePc = (l.nome_pc || '—').replace('PC GAMING ', '');
+    const data = l.creato_il ? new Date(l.creato_il).toLocaleString('it-IT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    const prezzo = parseFloat(l.prezzo)||0;
+    const prezzoScont = parseFloat(l.prezzo_scontato)||0;
+    const haWa = l.telefono && l.telefono.replace(/[^0-9]/g,'').length >= 6;
+    const badge = l.ha_comprato
+      ? '<span class="badge badge-sold">ACQUISTATO</span>'
+      : '<span class="badge badge-new">DA CONTATTARE</span>';
+
+    return `<div class="lead-card">
+      <div class="lead-head">
+        <div>
+          <div class="lead-name">${esc(nomeCompleto)} ${badge}</div>
+          <div class="lead-pc">🖥️ ${esc(nomePc)}</div>
+        </div>
+        <div class="lead-date">${data}</div>
+      </div>
+      <div class="lead-info">
+        <div class="info-item"><div class="info-lbl">Email</div><div class="info-val">${esc(l.email||'—')}</div></div>
+        <div class="info-item"><div class="info-lbl">Telefono</div><div class="info-val">${esc(l.telefono||'—')}</div></div>
+        <div class="info-item"><div class="info-lbl">Città</div><div class="info-val">${esc(l.citta||'—')}</div></div>
+        <div class="info-item"><div class="info-lbl">Indirizzo</div><div class="info-val">${esc(l.indirizzo||'—')}</div></div>
+      </div>
+      <div class="lead-price">
+        ${prezzoScont && prezzoScont<prezzo ? `<span class="price-now">€${prezzoScont.toLocaleString('it-IT',{minimumFractionDigits:2})}</span><span class="price-old">€${prezzo.toLocaleString('it-IT',{minimumFractionDigits:2})}</span>` : `<span class="price-now">€${prezzo.toLocaleString('it-IT',{minimumFractionDigits:2})}</span>`}
+      </div>
+      <div class="lead-actions">
+        ${haWa ? `<a class="btn-wa" href="${buildWaLink(l)}" target="_blank">💬 Scrivi su WhatsApp</a>` : '<span class="btn-ghost" style="opacity:.5">📵 No telefono</span>'}
+        ${l.shopify_url ? `<a class="btn-ghost" href="${esc(l.shopify_url)}" target="_blank">🔗 Vedi build</a>` : ''}
+        ${l.email ? `<a class="btn-ghost" href="mailto:${esc(l.email)}">✉️ Email</a>` : ''}
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Invio con tasto Enter
+document.getElementById('loginPassword').addEventListener('keypress', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('regPassword').addEventListener('keypress', e => { if(e.key==='Enter') doRegister(); });
+</script>
+</body>
+</html>
